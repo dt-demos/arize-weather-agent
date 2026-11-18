@@ -1,6 +1,6 @@
 # Overview
 
-An Agent that sends a prompt to Claude (Azure Foundry) and traces the calls to Arize.
+An Agent that sends a prompt to Claude (Azure Foundry) and traces the calls to [Arize](https://arize.com/docs/ax/learn/courses/getting-started-with-ax/instrumentation).
 
 ## How the agent works
 
@@ -76,3 +76,36 @@ python run_dataset.py --repeat 3 --delay 1
 | `--delay S` | Seconds to pause between prompts (default 0) |
 
 Each run tags its `weather_agent` spans with a `session.id` (e.g. `batch-ab12cd34`), printed at the end, so you can filter a batch in Arize.
+
+
+# Agent traces and evaluators in Arize
+
+## Trace list
+
+All `weather_agent` runs appear in the `weather-assistant` project, with latency, token count, and cost summarized at the top.
+
+![Trace list](images/traces-list.png)
+
+## Trace detail
+
+Drill into a single trace to see the agent span, each `messages.create` LLM call, and the `geocode` and `get_current_weather` tool calls, with inputs, outputs, tokens, and cost.
+
+![Trace detail](images/trace-detail.png)
+
+## Dataset
+
+The "Weather Assistant Test Suite" dataset holds the test prompts, each with a reference answer describing what a correct response looks like.
+
+![Dataset](images/dataset-test-suite.png)
+
+## Evaluator
+
+An LLM-as-a-judge evaluator ("Q&A Correctness") scores each response as `correct` or `incorrect` against the reference answer.
+
+![Evaluator](images/evaluator-qa-correctness.png)
+
+## Experiment results
+
+Running the dataset as an experiment scores every example with the evaluators and shows pass rates, latency, cost, and tokens.
+
+![Experiment results](images/experiment-results.png)
