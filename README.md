@@ -57,3 +57,22 @@ python main.py
 python main.py "your prompt"
 ```
 
+
+# Generate more traces
+
+`run_dataset.py` sends a hardcoded list of prompts through the agent to generate traces in Arize. It includes the prompts from the "Weather Assistant Test Suite" dataset plus extra ones (multiple cities, an unknown city) to vary the traces. It does not score anything; evaluations stay in Arize.
+
+```
+# run the full prompt list once
+python run_dataset.py
+
+# run it 3 times with a 1 second pause between prompts
+python run_dataset.py --repeat 3 --delay 1
+```
+
+| Flag | Description |
+|------|-------------|
+| `--repeat N` | Run the whole prompt list N times (default 1) |
+| `--delay S` | Seconds to pause between prompts (default 0) |
+
+Each run tags its `weather_agent` spans with a `session.id` (e.g. `batch-ab12cd34`), printed at the end, so you can filter a batch in Arize.

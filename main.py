@@ -16,7 +16,6 @@ deployment_name = os.environ["AZURE_DEPLOYMENT_NAME"]  # put this in .env
 api_key = os.environ["AZURE_API_KEY"]  # put this in .env
 
 DEFAULT_PROMPT = "What's the weather in Paris right now?"
-prompt = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_PROMPT
 
 MAX_STEPS = 5  # safety cap on the agent loop
 
@@ -111,13 +110,15 @@ def run_tool(name: str, args: dict) -> str:
 # ---------------------------------------------------------------------------
 # Agent loop
 # ---------------------------------------------------------------------------
-def run_agent(user_prompt: str):
+def run_agent(user_prompt: str, session_id: str | None = None):
     messages = [{"role": "user", "content": user_prompt}]
     input_tokens = output_tokens = 0
 
     with tracer.start_as_current_span("weather_agent") as agent_span:
         agent_span.set_attribute("openinference.span.kind", "AGENT")
         agent_span.set_attribute("input.value", user_prompt)
+        if session_id:
+            agent_span.set_attribute("session.id", session_id)
 
         for step in range(MAX_STEPS):
             message = client.messages.create(
@@ -151,16 +152,18 @@ def run_agent(user_prompt: str):
         return message, final_text, input_tokens, output_tokens
 
 
-message, final_text, input_tokens, output_tokens = run_agent(prompt)
+if __name__ == "__main__":
+    prompt = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_PROMPT
+    message, final_text, input_tokens, output_tokens = run_agent(prompt)
 
-# Full input/output detail
-print(f"Input:  {prompt}")
-print(f"Output: {final_text}")
-print(f"Model:  {message.model}")
-print(f"Stop reason: {message.stop_reason}")
-print(f"Input tokens (total):  {input_tokens}")
-print(f"Output tokens (total): {output_tokens}")
+    # Full input/output detail
+    print(f"Input:  {prompt}")
+    print(f"Output: {final_text}")
+    print(f"Model:  {message.model}")
+    print(f"Stop reason: {message.stop_reason}")
+    print(f"Input tokens (total):  {input_tokens}")
+    print(f"Output tokens (total): {output_tokens}")
 
-# Flush and send spans before exit
-trace.get_tracer_provider().shutdown()
-print("Traces flushed.")
+    # Flush and send spans before exit
+    trace.get_tracer_provider().shutdown()
+    print("Traces flushed.")
